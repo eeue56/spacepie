@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 text_mapping = {
     ' ' : '[Space]',
     '\n' : '[LF]',
@@ -76,10 +78,10 @@ class Stack(object):
 
 
     def output_char(self):
-        print(chr(self.stack[-1]))
+        print(chr(self.stack[-1]), end="")
 
     def output_number(self):
-        print(self.stack[-1])
+        print(self.stack[-1], end="")
 
     def read_char(self):
         address = self.stack[-1]
