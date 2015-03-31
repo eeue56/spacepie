@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from functools import partial
+
 from util import *
 
 text_mapping = {
@@ -115,6 +117,100 @@ class Stack(object):
         return None
 
 
+def stack_operations(stack, text, index):
+    next_char = text[index + 1]
+
+    # space for push
+    if next_char == ' ':
+        number, last_index = collect_number(text, index + 2)
+
+        stack.push(number)
+
+        index = last_index 
+
+    elif next_char == '\n':
+        next_char = text[index + 2]
+
+        if next_char == ' ':
+            stack.duplicate()
+        elif next_char == '\t':
+            stack.swap()
+        elif next_char == '\n':
+            stack.discard()
+
+        index += 3
+
+    elif next_char == '\t':
+        next_char = text[index + 2]
+
+        if next_char == ' ':
+            number, last_index = collect_number(text, index + 2)
+
+            stack.copy(number)
+
+            index = last_index + 3
+        elif next_char == '\n':
+            #TODO: slide
+            
+            index += 2
+    else:
+        index += 1
+
+    return index
+
+def heap_and_arithmetic_operations(stack, text, index):
+
+    next_char = text[index: index + 2]
+
+    # tab space for arithmetic
+    if next_char == '\t ':
+        op_code = text[index + 2:index + 4]
+
+        if op_code == '  ':
+            stack.add()
+        elif op_code == ' \t':
+            stack.subtract()
+        elif op_code == ' \n':
+            stack.multiply()
+        elif op_code == '\t ':
+            stack.divide()
+        elif op_code == '\t\t':
+            stack.modulo()
+
+        index += 4
+
+
+    # tab tab heap access
+    elif next_char == '\t\t':
+        next_char = text[index + 2]
+
+        if next_char == ' ':
+            stack.store()
+        elif next_char == '\t':
+            stack.retrieve()
+
+        index += 2
+
+    # tab lf IO
+    elif next_char == '\t\n':
+        op_code = text[index + 2:index+ 4]
+
+        if op_code == '  ':
+            stack.output_char()
+        elif op_code == ' \t':
+            stack.output_number()
+        elif op_code == '\t ':
+            stack.read_char()
+        elif op_code == '\t\t':
+            stack.read_number()
+
+        index += 4
+
+    else:
+        index += 1
+
+    return index
+
 
 # TODO: give a sensible name
 def process(text):
@@ -124,6 +220,9 @@ def process(text):
     before = -1
 
     i = 0
+
+    _stack_operations = partial(stack_operations, stack, text)
+    _heap_and_arithmetic_operations = partial(heap_and_arithmetic_operations, stack, text)
 
     while True:
         i+=1
@@ -145,90 +244,10 @@ def process(text):
 
         # space for stack
         if next_char == ' ':
-            next_char = text[index + 1]
-
-            # space for push
-            if next_char == ' ':
-                number, last_index = collect_number(text, index + 2)
-
-                stack.push(number)
-
-                index = last_index 
-
-            elif next_char == '\n':
-                next_char = text[index + 2]
-
-                if next_char == ' ':
-                    stack.duplicate()
-                elif next_char == '\t':
-                    stack.swap()
-                elif next_char == '\n':
-                    stack.discard()
-
-                index += 3
-
-            elif next_char == '\t':
-                next_char = text[index + 2]
-
-                if next_char == ' ':
-                    number, last_index = collect_number(text, index + 2)
-
-                    stack.copy(number)
-
-                    index = last_index + 3
-                elif next_char == '\n':
-                    #TODO: slide
-                    
-                    index += 2
-
-
+            index = _stack_operations(index)
 
         elif next_char == '\t':
-            next_char += text[index + 1]
-
-            # tab space for arithmetic
-            if next_char == '\t ':
-                op_code = text[index + 2:index + 4]
-
-                if op_code == '  ':
-                    stack.add()
-                elif op_code == ' \t':
-                    stack.subtract()
-                elif op_code == ' \n':
-                    stack.multiply()
-                elif op_code == '\t ':
-                    stack.divide()
-                elif op_code == '\t\t':
-                    stack.modulo()
-
-                index += 4
-
-
-            # tab tab heap access
-            elif next_char == '\t\t':
-                next_char = text[index + 2]
-
-                if next_char == ' ':
-                    stack.store()
-                elif next_char == '\t':
-                    stack.retrieve()
-
-                index += 2
-
-            # tab lf IO
-            elif next_char == '\t\n':
-                op_code = text[index + 2:index+ 4]
-
-                if op_code == '  ':
-                    stack.output_char()
-                elif op_code == ' \t':
-                    stack.output_number()
-                elif op_code == '\t ':
-                    stack.read_char()
-                elif op_code == '\t\t':
-                    stack.read_number()
-
-                index += 4
+            index = _heap_and_arithmetic_operations(index)
 
         # lf flow control
         elif next_char == '\n':
@@ -259,7 +278,7 @@ def process(text):
 
 
                 if _index is None:
-                    index = last_index + 1
+                    index = last_index
                 else:
                     index = _index
 
@@ -269,13 +288,14 @@ def process(text):
                 _index = stack.jump_if_negative(number)
 
                 if _index is None:
-                    index = last_index + 1
+                    index = last_index
                 else:
                     index = _index
             elif op_code == '\t\n':
                 index = call_index
             elif op_code == '\n\n':
                 return
+
 
 def convert_to_readable(text):
     for v, k in text_mapping.items():
@@ -374,6 +394,6 @@ if __name__ == '__main__':
     text += '\n\n\n'
 
     # expected output:
-    # 4802
+    # 4820
 
     process(text)
