@@ -135,6 +135,10 @@ def process(text):
 
         next_char = text[index]
 
+        if next_char not in text_mapping:
+            index += 1
+            continue
+
         # space for stack
         if next_char == ' ':
             next_char = text[index + 1]
@@ -380,5 +384,11 @@ if __name__ == '__main__':
     # end
     # 53
     text += '\n\n\n'
+
+    # expected output:
+    # 4
+    # 8 
+    # 0
+    # 2
 
     process(text)
