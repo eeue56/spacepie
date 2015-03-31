@@ -9,11 +9,14 @@ class Stack(object):
     def __init__(self):
         self.stack = []
         self.heap = {}
+        self.labels = {}
 
     def push(self, number):
+        #print("Pushing", number)
         self.stack.append(number)
 
     def duplicate(self):
+        #print("Duplicating")
         self.stack.append(self.stack[-1])
 
     def copy(self, n):
@@ -87,16 +90,45 @@ class Stack(object):
         self.heap[address] = ord(input("Enter: ").strip())
 
 
+    def mark(self, label, index):
+        #print("Marking", label, "at", index)
+        self.labels[label] = index
+
+    def call(self, label):
+        return self.labels[label]
+
+    def jump_to_unconditionally(self, label):
+        return self.labels[label]
+
+    def jump_if_zero(self, label):
+        if self.stack[-1] == 0:
+            return self.labels[label]
+        return None
+
+    def jump_if_negative(self, label):
+        if self.stack[-1] < 0:
+            return self.labels[label]
+        return None
+
+
+
 # TODO: give a sensible name
 def process(text):
     stack = Stack()
+
     index = 0
     before = -1
 
+    i = 0
+
     while True:
+        i+=1
+        #print("index is ", index, repr(text[index:]))
+        #print(stack.stack)
+        #print(stack.labels)
 
         # catch infinite loops, for debugging
-        if index == before:
+        if index == before or i > 100:
             break
         else: 
             before = index
@@ -109,13 +141,11 @@ def process(text):
 
             # space for push
             if next_char == ' ':
-                last_index = text[index + 2:].index('\n') 
-                bits = text[index + 2:last_index + 2]
-                number = whitespace_to_number(bits)
+                number, last_index = collect_number(text, index + 2)
 
                 stack.push(number)
 
-                index = last_index + 3
+                index = last_index 
 
             elif next_char == '\n':
                 next_char = text[index + 2]
@@ -133,9 +163,7 @@ def process(text):
                 next_char = text[index + 2]
 
                 if next_char == ' ':
-                    last_index = text[index + 2:].index('\n')
-                    bits = text[index + 2:last_index + 2]
-                    number = whitespace_to_number(bits)
+                    number, last_index = collect_number(text, index + 2)
 
                     stack.copy(number)
 
@@ -200,27 +228,53 @@ def process(text):
             op_code = text[index + 1: index +3]
 
             if op_code == '  ':
-                #stack.mark()
-                pass
+                number, last_index = collect_number(text, index + 2)
+
+                stack.mark(number, last_index)
+
+                index = last_index 
             elif op_code == ' \t':
-                #stack.call
-                pass
+                call_index = index + 2
+
+                number, last_index = collect_number(text, index + 2)
+
+                index = stack.call(number)
             elif op_code == ' \n':
-                #stack.jump_unconditionally
-                pass
+                number, last_index = collect_number(text, index + 2)
+
+                index = stack.jump_to_unconditionally(number)
+
             elif op_code == '\t ':
-                #stack_jump_if_zero
-                pass
+                number, last_index = collect_number(text, index + 2)
+
+                _index = stack.jump_if_zero(number)
+
+
+                if _index is None:
+                    index = last_index + 1
+                else:
+                    index = _index
+
             elif op_code == '\t\t':
-                #stack_jump_if_negative
-                pass
+                number, last_index = collect_number(text, index + 2)
+
+                _index = stack.jump_if_negative(number)
+
+                if _index is None:
+                    index = last_index
+                else:
+                    index = _index
             elif op_code == '\t\n':
-                #stack_end_mark
-                pass
+                index = call_index
             elif op_code == '\n\n':
                 return
 
 
+def collect_number(text, start_index):
+    last_index = text[start_index:].index('\n')
+    bits = text[start_index:start_index + last_index + 1]
+    number = whitespace_to_number(bits)
+    return (number, start_index + last_index + 1)
 
 
 def whitespace_to_number(whitespace):
@@ -277,9 +331,11 @@ def test():
 if __name__ == '__main__':
     test()
 
-    # push 6 to stack
+    # push 4 to stack
     # 0
-    text = '  \t\t \n'
+    text = '  \t  \n'
+
+    assert collect_number(text, 2) == (4, 6)
 
     # duplicate
     # 6
@@ -297,7 +353,32 @@ if __name__ == '__main__':
     # 17
     text += '\t\n \t'
 
+    # push 2
+    # 21
+    text += '   \t \n'
+
+    # mark with label 1
+    # 27
+    text += '\n  \t \n'
+
+    # push 2
+    # 33
+    text += '   \t \n'
+
+    # subtract
+    # 39
+    text += '\t  \t'
+
+    # output number
+    # 43
+    text += '\t\n \t'
+
+    # jump if zero
+    # 47
+    text += '\n\t \t \n'
+
     # end
+    # 53
     text += '\n\n\n'
 
     process(text)
