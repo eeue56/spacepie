@@ -265,7 +265,7 @@ def process(text):
                 _index = stack.jump_if_negative(number)
 
                 if _index is None:
-                    index = last_index
+                    index = last_index + 1
                 else:
                     index = _index
             elif op_code == '\t\n':
