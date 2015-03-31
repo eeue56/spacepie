@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+from util import *
+
 text_mapping = {
     ' ' : '[Space]',
     '\n' : '[LF]',
@@ -275,22 +277,6 @@ def process(text):
             elif op_code == '\n\n':
                 return
 
-
-def collect_number(text, start_index):
-    last_index = text[start_index:].index('\n')
-    bits = text[start_index:start_index + last_index + 1]
-    number = whitespace_to_number(bits)
-    return (number, start_index + last_index + 1)
-
-
-def whitespace_to_number(whitespace):
-    return int(whitespace.replace(" ", "0").replace("\t", "1"), 2)
-
-def number_to_whitespace(number):
-    as_string = "{0:b}".format(number)
-    return as_string.replace("0", " ").replace("1", "\t")
-
-
 def convert_to_readable(text):
     for v, k in text_mapping.items():
         text = text.replace(v, k)
@@ -388,9 +374,6 @@ if __name__ == '__main__':
     text += '\n\n\n'
 
     # expected output:
-    # 4
-    # 8 
-    # 0
-    # 2
+    # 4802
 
     process(text)
