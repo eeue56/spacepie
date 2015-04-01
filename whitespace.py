@@ -35,7 +35,10 @@ class Stack(object):
         self.stack.pop()
 
     def slide(self, n):
-        return
+        top = self.stack.pop()
+
+        self.stack = self.stack[:-(n + 1)]
+        self.stack.append(top)
 
 
     def add(self):
@@ -150,9 +153,10 @@ def stack_operations(stack, text, index):
 
             index = last_index + 3
         elif next_char == '\n':
-            #TODO: slide
-            
-            index += 2
+            number, last_index = collect_number(text, index + 2)
+            stack.slide(number)
+
+            index = last_index + 3
     else:
         index += 1
 
